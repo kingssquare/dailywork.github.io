@@ -11,50 +11,95 @@ if (attendanceForm) {
         const btn = document.getElementById('submitBtn');
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying ID...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
         }
 
-        // Defensive element lookup
         const teacherIDEl = document.getElementById('teacherID');
         const teacherNameEl = document.getElementById('teacherName');
-        const schoolEl = document.getElementById('schoolSelect'); // matches updated index.html
+        const schoolEl = document.getElementById('schoolSelect'); // must match index.html
         const statusEl = document.querySelector('input[name="status"]:checked');
 
         if (!teacherIDEl || !teacherNameEl || !schoolEl || !statusEl) {
+            console.error('Form elements missing:', { teacherIDEl, teacherNameEl, schoolEl, statusEl });
             alert("Form elements missing. Please refresh the page.");
             if (btn) { btn.disabled = false; btn.innerText = 'Submit Record'; }
             return;
         }
 
         const payload = {
-            teacherID: teacherIDEl.value,
-            teacherName: teacherNameEl.value,
+            teacherID: teacherIDEl.value.trim(),
+            teacherName: teacherNameEl.value.trim(),
             school: schoolEl.value,
             checkStatus: statusEl.value,
             timestamp: new Date().toISOString()
         };
 
+        console.log('Submitting payload:', payload);
+
+        // Try normal fetch with CORS first (preferred)
         try {
-            // Note: Using 'no-cors' will silently fail to give a readable response.
-            // If your server supports CORS, remove mode: 'no-cors' to get real responses.
-            await fetch(WEB_APP_URL, {
+            const res = await fetch(WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', 
+                mode: 'cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            showSuccess();
+            // If server responds and CORS allowed, handle success
+            if (res.ok) {
+                console.log('Fetch cors succeeded, status:', res.status);
+                showSuccess();
+                return;
+            } else {
+                console.warn('Fetch cors returned non-ok status:', res.status, await res.text().catch(()=>'<no-text>'));
+                // fall through to fallback attempts
+            }
         } catch (err) {
-            console.error(err);
-            alert("Connection Error. Check Internet.");
-            if (btn) { btn.disabled = false; btn.innerText = 'Submit Record'; }
+            console.warn('Fetch cors failed (likely CORS error):', err);
         }
+
+        // Fallback 1: navigator.sendBeacon (fire-and-forget, widely accepted for cross-origin)
+        try {
+            if (navigator && typeof navigator.sendBeacon === 'function') {
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                const beaconOk = navigator.sendBeacon(WEB_APP_URL, blob);
+                console.log('navigator.sendBeacon result:', beaconOk);
+                if (beaconOk) {
+                    // give the beacon a moment to be sent
+                    setTimeout(() => showSuccess(), 500);
+                    return;
+                }
+            } else {
+                console.log('sendBeacon not available in this environment');
+            }
+        } catch (err) {
+            console.warn('sendBeacon failed:', err);
+        }
+
+        // Fallback 2: fetch no-cors (won't give readable response but often reaches the server)
+        try {
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            });
+            console.log('Fetch no-cors attempted (opaque response). Assuming success if server accepts it.');
+            showSuccess();
+            return;
+        } catch (err) {
+            console.error('Final fetch no-cors failed:', err);
+        }
+
+        // If we reach here everything failed
+        alert('Submission failed — check console for details (F12).');
+        if (btn) { btn.disabled = false; btn.innerText = 'Submit Record'; }
     });
 }
 
 function showSuccess() {
-    // If there's an overlay element in the future, it will be used.
+    const btn = document.getElementById('submitBtn');
+    if (btn) { btn.disabled = false; btn.innerText = 'Submit Record'; }
+
     const overlay = document.getElementById('successOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
@@ -62,16 +107,13 @@ function showSuccess() {
         return;
     }
 
-    // Fallback to SweetAlert2 (included in index.html)
     if (typeof Swal !== 'undefined') {
         Swal.fire({
             icon: 'success',
             title: 'Submitted',
             text: 'Your attendance has been recorded.',
             confirmButtonText: 'OK'
-        }).then(() => {
-            resetUI();
-        });
+        }).then(() => resetUI());
     } else {
         alert('Submitted. Thank you!');
         resetUI();
@@ -79,7 +121,8 @@ function showSuccess() {
 }
 
 function resetUI() {
-    location.reload(); // Simplest way to reset everything for the next teacher
+    // Better UX could clear fields instead of reloading; reload for a clean state:
+    location.reload();
 }
 
 // --- ADMIN DASHBOARD LOGIC ---
@@ -97,7 +140,6 @@ function checkPassword() {
 }
 
 function logout() {
-    // simple logout to show login section again
     document.getElementById('dashboardSection').classList.add('hidden');
     document.getElementById('loginSection').classList.remove('hidden');
 }
@@ -118,10 +160,12 @@ function loadDashboardData() {
 function updateStats(data) {
     const today = new Date().toISOString().split('T')[0];
     const todayEntries = data.filter(r => (r.date || r.timestamp || '').includes(today));
-    document.getElementById('totalCheckins').innerText = todayEntries.length;
+    const totalEl = document.getElementById('totalCheckins');
+    if (totalEl) totalEl.innerText = todayEntries.length;
     
     const schools = [...new Set(data.map(r => r.school))];
-    document.getElementById('activeSchools').innerText = schools.length;
+    const activeEl = document.getElementById('activeSchools');
+    if (activeEl) activeEl.innerText = schools.length;
 }
 
 function updateTable(data) {
