@@ -1,5 +1,5 @@
 // CONFIGURATION
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwmxO2LoEd8cumR5qF3eRuUm9UU_HS3E9KROL_dBNT0IBedS1IclZCGoVSRN0e5hwkE/exec'; 
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxFqbQiAur6aRHTyvUL6VTr2fCT-sVKVtUIG9z3PhFAx6STX_piYkJRXzJqpc_5S5r1/exec'; 
 const ADMIN_PASSWORD = "admin123"; 
 
 // --- TEACHER FORM LOGIC ---
@@ -200,3 +200,4 @@ function updateChart(data) {
         options: { plugins: { legend: { position: 'bottom' } } }
     });
 }
+
