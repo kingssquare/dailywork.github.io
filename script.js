@@ -5,40 +5,76 @@ const ADMIN_PASSWORD = "admin123";
 // --- TEACHER FORM LOGIC ---
 const attendanceForm = document.getElementById('attendanceForm');
 if (attendanceForm) {
-    attendanceForm.addEventListener('submit', function(e) {
+    attendanceForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying ID...';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verifying ID...';
+        }
+
+        // Defensive element lookup
+        const teacherIDEl = document.getElementById('teacherID');
+        const teacherNameEl = document.getElementById('teacherName');
+        const schoolEl = document.getElementById('schoolSelect'); // matches updated index.html
+        const statusEl = document.querySelector('input[name="status"]:checked');
+
+        if (!teacherIDEl || !teacherNameEl || !schoolEl || !statusEl) {
+            alert("Form elements missing. Please refresh the page.");
+            if (btn) { btn.disabled = false; btn.innerText = 'Submit Record'; }
+            return;
+        }
 
         const payload = {
-            teacherID: document.getElementById('teacherID').value,
-            schoolSelect: document.getElementById('schoolSelect').value,
-            checkStatus: document.querySelector('input[name="status"]:checked').value
+            teacherID: teacherIDEl.value,
+            teacherName: teacherNameEl.value,
+            school: schoolEl.value,
+            checkStatus: statusEl.value,
+            timestamp: new Date().toISOString()
         };
 
-        // Note: Using 'no-cors' means we can't see the "INVALID_ID" text return easily.
-        // For strict validation, we use a standard 'cors' fetch if configured, 
-        // but to keep it simple for GitHub Pages:
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors', 
-            body: JSON.stringify(payload)
-        }).then(() => {
+        try {
+            // Note: Using 'no-cors' will silently fail to give a readable response.
+            // If your server supports CORS, remove mode: 'no-cors' to get real responses.
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
             showSuccess();
-        }).catch(err => {
+        } catch (err) {
+            console.error(err);
             alert("Connection Error. Check Internet.");
-            btn.disabled = false;
-        });
+            if (btn) { btn.disabled = false; btn.innerText = 'Submit Record'; }
+        }
     });
 }
 
 function showSuccess() {
+    // If there's an overlay element in the future, it will be used.
     const overlay = document.getElementById('successOverlay');
-    if(overlay) {
+    if (overlay) {
         overlay.style.display = 'flex';
         overlay.classList.add('animate__fadeIn');
+        return;
+    }
+
+    // Fallback to SweetAlert2 (included in index.html)
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Submitted',
+            text: 'Your attendance has been recorded.',
+            confirmButtonText: 'OK'
+        }).then(() => {
+            resetUI();
+        });
+    } else {
+        alert('Submitted. Thank you!');
+        resetUI();
     }
 }
 
@@ -60,6 +96,12 @@ function checkPassword() {
     }
 }
 
+function logout() {
+    // simple logout to show login section again
+    document.getElementById('dashboardSection').classList.add('hidden');
+    document.getElementById('loginSection').classList.remove('hidden');
+}
+
 function loadDashboardData() {
     fetch(WEB_APP_URL)
         .then(res => res.json())
@@ -67,12 +109,15 @@ function loadDashboardData() {
             updateStats(data);
             updateTable(data);
             updateChart(data);
+        })
+        .catch(err => {
+            console.error('Failed to load dashboard data:', err);
         });
 }
 
 function updateStats(data) {
     const today = new Date().toISOString().split('T')[0];
-    const todayEntries = data.filter(r => r.date.includes(today));
+    const todayEntries = data.filter(r => (r.date || r.timestamp || '').includes(today));
     document.getElementById('totalCheckins').innerText = todayEntries.length;
     
     const schools = [...new Set(data.map(r => r.school))];
@@ -81,20 +126,23 @@ function updateStats(data) {
 
 function updateTable(data) {
     const tbody = document.getElementById('tableBody');
+    if (!tbody) return;
     tbody.innerHTML = data.slice(-15).reverse().map(row => `
         <tr>
-            <td>${row.time}</td>
-            <td>${row.name}</td>
-            <td>${row.school}</td>
-            <td><span class="badge ${row.status === 'Check-In' ? 'bg-success' : 'bg-danger'}">${row.status}</span></td>
+            <td>${row.time || row.timestamp || ''}</td>
+            <td>${row.name || row.teacherName || ''}</td>
+            <td>${row.school || ''}</td>
+            <td><span class="badge ${ (row.status === 'Check-In' || row.checkStatus === 'Check-In') ? 'bg-success' : 'bg-danger'}">${row.status || row.checkStatus || ''}</span></td>
         </tr>
     `).join('');
 }
 
 function updateChart(data) {
-    const ctx = document.getElementById('schoolChart').getContext('2d');
+    const ctxEl = document.getElementById('schoolChart');
+    if (!ctxEl) return;
+    const ctx = ctxEl.getContext('2d');
     const counts = {};
-    data.forEach(r => counts[r.school] = (counts[r.school] || 0) + 1);
+    data.forEach(r => counts[(r.school || '')] = (counts[r.school] || 0) + 1);
 
     new Chart(ctx, {
         type: 'doughnut',
