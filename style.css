@@ -1,0 +1,141 @@
+/* CSS Variables */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --glass-bg: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    --radius-sm: 10px;
+    --radius-lg: 20px;
+    --transition: all 0.3s ease;
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--primary-gradient);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Floating shapes for background effect */
+.background-overlay {
+    position: relative;
+}
+
+.background-overlay::before,
+.background-overlay::after {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+}
+
+.background-overlay::before {
+    top: -50px;
+    left: -50px;
+}
+
+.background-overlay::after {
+    bottom: -50px;
+    right: -50px;
+}
+
+/* Glass Card Component */
+.glass-card {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+}
+
+/* Form Controls */
+.form-control {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    height: 50px;
+    padding: 0 15px;
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.form-control:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: #667eea;
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+/* Button Group */
+.btn-group label {
+    border-radius: var(--radius-sm);
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+}
+
+.btn-group label:hover {
+    opacity: 0.9;
+}
+
+/* Icon Box Component */
+.icon-box {
+    background: rgba(255, 255, 255, 0.2);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.icon-box:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .glass-card {
+        max-width: 100%;
+        margin: 0 15px;
+    }
+
+    .form-control {
+        height: 45px;
+        font-size: 16px;
+    }
+}
