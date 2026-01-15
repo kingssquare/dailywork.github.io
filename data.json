@@ -1,1 +1,20 @@
-[]
+{
+  "attendanceRecords": [
+    {
+      "id": 1,
+      "teacherID": "T-001",
+      "teacherName": "Sample Teacher",
+      "school": "Al-Hikma College",
+      "status": "Check-In",
+      "timestamp": "1/15/2026, 9:30 AM"
+    },
+    {
+      "id": 2,
+      "teacherID": "T-002",
+      "teacherName": "Another Teacher",
+      "school": "Buddhist Ladies College",
+      "status": "Check-Out",
+      "timestamp": "1/15/2026, 5:45 PM"
+    }
+  ]
+}

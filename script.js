@@ -44,7 +44,56 @@ function updateClock() {
     document.getElementById('liveClock').innerText = now.toLocaleDateString('en-US', options);
 }
 
-// 4. Handle Form Submission
+// 4. Load existing data from data.json
+let attendanceData = { attendanceRecords: [] };
+
+async function loadAttendanceData() {
+    try {
+        const response = await fetch('data.json');
+        const data = await response.json();
+        attendanceData = data;
+        console.log("Attendance data loaded:", attendanceData);
+    } catch (error) {
+        console.warn("Could not load data.json, starting with empty records:", error);
+        attendanceData = { attendanceRecords: [] };
+    }
+}
+
+// Load data on page load
+loadAttendanceData();
+
+// 5. Save data to data.json (sends to server/backend)
+async function saveAttendanceRecord(record) {
+    try {
+        // Add unique ID and add to array
+        record.id = attendanceData.attendanceRecords.length + 1;
+        attendanceData.attendanceRecords.push(record);
+
+        // Send to backend to save to JSON
+        const response = await fetch('save-attendance.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(attendanceData)
+        });
+
+        if (response.ok) {
+            console.log("Record saved successfully");
+            return true;
+        } else {
+            console.error("Failed to save record");
+            return false;
+        }
+    } catch (error) {
+        console.warn("Saving to backend failed, storing locally:", error);
+        // Local storage fallback
+        localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+        return true;
+    }
+}
+
+// 6. Handle Form Submission
 document.getElementById('attendanceForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -73,13 +122,18 @@ document.getElementById('attendanceForm').addEventListener('submit', function(e)
         return;
     }
 
-    // --- SIMULATING SERVER REQUEST ---
-    // In a real scenario, you would use fetch() here to send data to Google Sheets
+    // Save the record
     console.log("Submitting Data:", formData);
 
-    setTimeout(() => {
-        // Success Action
-        showAlert('success', 'Success!', `Recorded: ${formData.status} at ${formData.school}`);
+    setTimeout(async () => {
+        const saved = await saveAttendanceRecord(formData);
+        
+        if (saved) {
+            // Success Action
+            showAlert('success', 'Success!', `Recorded: ${formData.status} at ${formData.school}`);
+        } else {
+            showAlert('error', 'Error', 'Failed to save record. Please try again.');
+        }
         
         // Reset Form
         document.getElementById('attendanceForm').reset();
