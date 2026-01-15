@@ -35,6 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start Live Clock
     updateClock();
     setInterval(updateClock, 1000);
+
+    // Load attendance data
+    loadAttendanceData();
+
+    // Attach form submission handler
+    const attendanceForm = document.getElementById('attendanceForm');
+    if (attendanceForm) {
+        attendanceForm.addEventListener('submit', handleAttendanceSubmit);
+    }
 });
 
 // 3. Live Clock Function
@@ -60,7 +69,7 @@ async function loadAttendanceData() {
 }
 
 // Load data on page load
-loadAttendanceData();
+// loadAttendanceData(); - Moved to DOMContentLoaded event
 
 // 5. Save data to data.json (sends to server/backend)
 async function saveAttendanceRecord(record) {
@@ -94,7 +103,7 @@ async function saveAttendanceRecord(record) {
 }
 
 // 6. Handle Form Submission
-document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+function handleAttendanceSubmit(e) {
     e.preventDefault();
 
     // UI Loading State
@@ -139,7 +148,7 @@ document.getElementById('attendanceForm').addEventListener('submit', function(e)
         document.getElementById('attendanceForm').reset();
         resetBtn();
     }, 1500);
-});
+}
 
 function resetBtn() {
     document.getElementById('btnText').textContent = "Submit Record";
