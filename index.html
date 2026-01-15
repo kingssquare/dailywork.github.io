@@ -3,57 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Check-In</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>Teacher Check-In Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="glass-card">
-    <div class="text-center mb-4">
-        <h3 class="fw-bold text-primary">Attendance Portal</h3>
-        <p class="text-muted small">Log your daily activity</p>
-    </div>
+<div class="background-overlay"></div>
 
-    <form id="attendanceForm">
-        <div class="mb-3">
-            <label class="form-label small fw-bold">ID Number</label>
-            <input type="text" id="teacherID" class="form-control" placeholder="T-1234" required>
-        </div>
-        
-        <div class="mb-3">
-            <label class="form-label small fw-bold">Full Name</label>
-            <input type="text" id="teacherName" class="form-control" placeholder="John Doe" required>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label small fw-bold">Current School</label>
-            <!-- IMPORTANT: id must match the script (schoolSelect) -->
-            <select id="schoolSelect" class="form-select" required>
-                <option value="">Select Location...</option>
-                <option>Greenwood High</option>
-                <option>Westside Academy</option>
-                <option>City College</option>
-            </select>
-        </div>
-
-        <div class="mb-4">
-            <label class="form-label small fw-bold d-block">Status</label>
-            <div class="btn-group w-100" role="group">
-                <input type="radio" class="btn-check" name="status" id="in" value="Check-In" checked>
-                <label class="btn btn-outline-success" for="in">Check In</label>
-                
-                <input type="radio" class="btn-check" name="status" id="out" value="Check-Out">
-                <label class="btn btn-outline-danger" for="out">Check Out</label>
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="glass-card p-5">
+        <div class="text-center mb-4">
+            <div class="icon-box mb-3">
+                <i class="bi bi-person-badge-fill text-white fs-2"></i>
             </div>
+            <h3 class="fw-bold text-white">Attendance Portal</h3>
+            <p class="text-white-50 small" id="liveClock">Loading time...</p>
         </div>
 
-        <button type="submit" id="submitBtn" class="btn btn-primary">Submit Record</button>
-    </form>
-    
-    <div class="text-center mt-3">
-        <a href="admin.html" class="text-decoration-none small text-muted">Admin Login</a>
+        <form id="attendanceForm">
+            <input type="hidden" id="timestamp" name="timestamp">
+
+            <div class="form-floating mb-3">
+                <input type="text" id="teacherID" class="form-control" placeholder="T-1234" required oninput="this.value = this.value.toUpperCase()">
+                <label for="teacherID">Teacher ID</label>
+            </div>
+            
+            <div class="form-floating mb-3">
+                <input type="text" id="teacherName" class="form-control" placeholder="John Doe" required>
+                <label for="teacherName">Full Name</label>
+            </div>
+
+            <div class="mb-3">
+                <label class="text-white-50 small mb-1 ms-1">Select School</label>
+                <input class="form-control" list="schoolOptions" id="schoolInput" placeholder="Type to search school..." required>
+                <datalist id="schoolOptions">
+                    </datalist>
+            </div>
+
+            <div class="mb-4">
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="status" id="in" value="Check-In" checked>
+                    <label class="btn btn-outline-light" for="in"><i class="bi bi-box-arrow-in-right"></i> Check In</label>
+                    
+                    <input type="radio" class="btn-check" name="status" id="out" value="Check-Out">
+                    <label class="btn btn-outline-light" for="out"><i class="bi bi-box-arrow-left"></i> Check Out</label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-light w-100 fw-bold text-primary">
+                <span id="btnText">Submit Record</span>
+                <span id="btnSpinner" class="spinner-border spinner-border-sm d-none"></span>
+            </button>
+        </form>
+        
+        <div class="text-center mt-4">
+            <a href="admin.html" class="text-white-50 text-decoration-none small">Admin Dashboard &rarr;</a>
+        </div>
     </div>
 </div>
 
